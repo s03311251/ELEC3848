@@ -115,10 +115,10 @@ void loop() {
  for (int i=0;i<4;i++){
   cubicle_state[i] = digitalRead(cubicle_state_pin[i]) == LOW ? true : false;
   
-  if (cubicle_state[i] == true && cubicle_state_prev[i] == false){
+  if (cubicle_state[i] == false && cubicle_state_prev[i] == true){
     cubicle_state_t_prev[i] = now_t;
   }
-  else if (cubicle_state[i] == false && cubicle_state_prev[i] == true){
+  else if (cubicle_state[i] == true && cubicle_state_prev[i] == false){
     cubicle_state_t[i] = (now_t - cubicle_state_t_prev[i]) / 1000;
   }
  }
@@ -146,16 +146,17 @@ void loop() {
   //stall1_t_queue_idx = 0;
   Serial.println();
   
-  Serial.println("Cubicle: ");
+  Serial.print("Cubicle: ");
   for (int i=0;i<4;i++){
     Serial.print(cubicle_state[i]);
+    Serial.print(cubicle_state_prev[i]);
     Serial.print(' ');
   }
   for (int i=0;i<4;i++){
     Serial.print(cubicle_state_t[i]);
     Serial.print(' ');
   }
-  Serial.print("Battery: ");
+  Serial.print("\nBattery: ");
   Serial.println(analogRead(A0));
   
  #endif
@@ -170,6 +171,17 @@ void loop() {
   WiFiClient client;
   if (!client.connect(host, port)) {
     Serial.println("connection failed");
+
+    
+    prev_t = now_t;
+    stall0_state_prev = stall0_state;
+    stall1_state_prev = stall1_state;
+    for (int i=0;i<4;i++){
+      Serial.println(cubicle_state[i]);
+      cubicle_state_prev[i] = cubicle_state[i];
+      cubicle_state_t[i] = 0;
+    }
+    
     return;
   }
 
@@ -203,7 +215,7 @@ void loop() {
   client.println();
 
   /* Battery */
-  client.print("B");
+  client.print("B ");
   client.print(analogRead(A0));
   client.println();
   
@@ -234,10 +246,11 @@ void loop() {
   prev_t = now_t;
   stall0_state_prev = stall0_state;
   stall1_state_prev = stall1_state;
-   for (int i=0;i<4;i++){
+  for (int i=0;i<4;i++){
+    Serial.println(cubicle_state[i]);
     cubicle_state_prev[i] = cubicle_state[i];
     cubicle_state_t[i] = 0;
-   }
+  }
   delay(1000);
 
 }

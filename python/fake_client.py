@@ -3,7 +3,7 @@ import socket
 
 if __name__ == '__main__':
 
-	TCP_IP = 'localhost'
+	TCP_IP = '192.168.0.191'
 	TCP_PORT = 38763
 	BUFFER_SIZE = 1024
 	'''

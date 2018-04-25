@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import csv
+#import csv
 import socket
 import telepot
 import datetime
@@ -90,6 +90,10 @@ def CubiclePlot(worker):
 	with open('data/cubicle'+str(worker)+'_log.txt', 'r') as f:
 		t_list = f.read().split(',')
 	f.close()
+	
+	if len(t_list) <= 1:
+		return False
+	
 	t_list = [float(i) for i in t_list]
 
 	plt.hist(t_list, normed=False, bins=100) # bins: divide into 100 ranges
@@ -99,6 +103,8 @@ def CubiclePlot(worker):
 	plt.xlabel('time (sec)')
 	plt.savefig('data/cubicle'+str(worker)+'_plot.png')
 	plt.clf()
+	
+	return True
 
 
 
@@ -156,7 +162,7 @@ def BatteryRecord(x):
 		last_t = datetime.datetime.strptime(last_log[0], '%Y-%m-%d %H:%M:%S.%f')
 	else:
 		last_t = now_t
-
+		
 	# remove lines if necessiary
 	if len(lines) > LOG_MAX_LEN:
 		if now_t - last_t < LOG_T_DELTA:
@@ -175,9 +181,10 @@ def BatteryRecord(x):
 
 	# write
 	with open ("data/battery_log.txt", "a") as f:
-		f.write(str(now_t)+','+str(x)+'\n')
+		f.write(str(now_t)+','+str(x))
 	f.close()
 
+	
 
 
 def BatteryPlot():
@@ -191,6 +198,9 @@ def BatteryPlot():
 			value_list.append(row[1])
 	f.close()
 
+	if len(t_list) <= 1:
+		return False
+	
 	t_list = date2num(t_list)
 
 	fig, ax = plt.subplots()
@@ -210,6 +220,8 @@ def BatteryPlot():
 	plt.savefig('data/battery_plot.png')
 	plt.clf()
 
+	return True
+	
 
 
 def TCPListener():
@@ -267,10 +279,12 @@ def TCPListener():
 					stall_num = int(words[1])
 					stall_state = []
 					for word in words[2:2+stall_num]:
-						stall_state.append(word == '0')
+						print (word)
+						stall_state.append(int(word) == 1)
 					wait_t = []
-					for word in words[2+stall_num:]:
-						wait_t.append(int(word))
+					if len(words) > 2+stall_num: # somebody has left the stall
+						for word in words[2+stall_num:]:
+							wait_t.append(int(word))
 
 					print(toilet_id)
 					print(stall_state)
@@ -406,11 +420,11 @@ def on_callback_query(msg):
 
 				bot.sendMessage(from_id, reply_str, parse_mode='Markdown')
 				if all_occupied:
-					bot.sendMessage(from_id, 'No stall is vacant\nAverage Waiting Time: '+str(ToiletAvg(1)))
-					bot.sendMessage(from_id, 'You may go to the toilet on 2/F\nVacant stalls: 1, 4, 5')
+					bot.sendMessage(from_id, 'No stall is vacant\nAverage Waiting Time: '+str(round(ToiletAvg(1), 2))+' seconds')
+					bot.sendMessage(from_id, 'You may go to the toilet on 2/F\nnumber of vacant stalls: 2')
 
 		elif commands[1] == '2':
-			bot.sendMessage(from_id, '*2/F*\n1: Vacant\n2: Occupied\n3: Occupied\n4: Vacant\n5: Vacant\n', parse_mode='Markdown')
+			bot.sendMessage(from_id, '*2/F*\n1: Vacant\n2: Occupied\n3: Occupied\n4: Vacant\n5: Occupied\n', parse_mode='Markdown')
 
 		elif commands[1] == '3':
 			bot.sendMessage(from_id, '*3/F*\n1: Vacant\n2: Occupied\n3: Occupied\n4: Occupied\n', parse_mode='Markdown')
@@ -449,12 +463,13 @@ def on_callback_query(msg):
 
 		elif commands[1] == 'battery':
 			bot.sendMessage(from_id, 'Drawing Plot')
-			BatteryPlot()
-
-			bot.sendMessage(from_id, 'Sending Plot')
-			with open('data/battery_plot.png', 'rb') as f:
-				bot.sendPhoto(from_id, f)
-			f.close()
+			if BatteryPlot():
+				bot.sendMessage(from_id, 'Sending Plot')
+				with open('data/battery_plot.png', 'rb') as f:
+					bot.sendPhoto(from_id, f)
+				f.close()
+			else:
+				bot.sendMessage(from_id, 'Error: Insufficient Data')
 
 
 
@@ -474,17 +489,16 @@ def on_callback_query(msg):
 
 		bot.sendMessage(from_id, 'Drawing Plot')
 		CubicleHourPlot(int(commands[1]))
-		CubiclePlot(int(commands[1]))
-
-
-		bot.sendMessage(from_id, 'Sending Plot')
-		with open('data/cubicle'+commands[1]+'_plot.png', 'rb') as f:
-			bot.sendPhoto(from_id, f)
-		f.close()
-		with open('data/cubicle'+commands[1]+'_hour_plot.png', 'rb') as f:
-			bot.sendPhoto(from_id, f)
-		f.close()
-
+		if CubiclePlot(int(commands[1])):
+			bot.sendMessage(from_id, 'Sending Plot')
+			with open('data/cubicle'+commands[1]+'_plot.png', 'rb') as f:
+				bot.sendPhoto(from_id, f)
+			f.close()
+			with open('data/cubicle'+commands[1]+'_hour_plot.png', 'rb') as f:
+				bot.sendPhoto(from_id, f)
+			f.close()
+		else:
+			bot.sendMessage(from_id, 'Error: No data.\nGenius! This guy don\'t need to go to toilet!')
 
 
 
