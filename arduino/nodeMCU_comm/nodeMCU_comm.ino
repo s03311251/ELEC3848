@@ -157,7 +157,8 @@ void loop() {
     Serial.print(' ');
   }
   Serial.print("\nBattery: ");
-  Serial.println(analogRead(A0));
+  
+  Serial.println( 59.0 / 12 * 3.3 / 1024 * analogRead(A0));
   
  #endif
 
@@ -216,7 +217,7 @@ void loop() {
 
   /* Battery */
   client.print("B ");
-  client.print(analogRead(A0));
+  client.print( 59.0 / 12 * 3.3 / 1024 * analogRead(A0));
   client.println();
   
   Serial.println("closing connection");

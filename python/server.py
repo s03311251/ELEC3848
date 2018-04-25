@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-#import csv
+import csv
 import socket
 import telepot
 import datetime
@@ -11,7 +11,7 @@ from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
 
 LOG_MAX_LEN = 500
 LOG_T_DELTA = datetime.timedelta(minutes=5)
-employee_name = ['Alice', 'Bob', 'Christina', 'Dave']
+employee_name = ['Alice', 'Bob', 'Charles', 'Dave']
 
 
 
@@ -331,6 +331,7 @@ def on_chat_message(msg):
 				if commands[1] == PASSWORD:
 					manager_set.add(from_id)
 					bot.sendMessage(from_id, 'Manager Mode Activated')
+					bot.sendMessage(from_id, 'Manager Menu:', reply_markup = menu_su)
 				else:
 					bot.sendMessage(from_id, 'Wrong Manager Password')
 			else:
@@ -389,7 +390,7 @@ def on_callback_query(msg):
 	menu_cubicle_stat = InlineKeyboardMarkup(inline_keyboard=[
 		[InlineKeyboardButton(text='Alice', callback_data='cubicle_stat 1')],
 		[InlineKeyboardButton(text='Bob', callback_data='cubicle_stat 2')],
-		[InlineKeyboardButton(text='Christina', callback_data='cubicle_stat 3')],
+		[InlineKeyboardButton(text='Charles', callback_data='cubicle_stat 3')],
 		[InlineKeyboardButton(text='Dave', callback_data='cubicle_stat 4')],
 	])
 
