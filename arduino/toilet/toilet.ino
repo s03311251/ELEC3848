@@ -10,13 +10,16 @@ The range readings are in units of mm. */
 
 #define VB_DEBUG 1
 
+int stall0_state_pin(A0);
+int stall1_state_pin(A1);
+
 /* VL530LX */
 const byte VB0_XSHUT(4);
 const byte VB1_XSHUT(5);
 VL53L0X VB0;
 VL53L0X VB1;
-const uint16_t VB0_THOLD(135);
-const uint16_t VB1_THOLD(110);
+const uint16_t VB0_THOLD(145);
+const uint16_t VB1_THOLD(120);
 const uint16_t VB_DEADZONE(10); // +- 10
 
 
@@ -64,6 +67,11 @@ uint8_t stall1_state_record_idx(0);
 
 void setup(){
   Serial.begin(9600);
+
+
+  pinMode(stall0_state_pin, OUTPUT);
+  pinMode(stall1_state_pin, OUTPUT);
+
   
   /* Servo */
   servo0.attach(9);
@@ -164,6 +172,12 @@ void loop(){
     noTone(BUZZER1);
     digitalWrite(UV1, LOW);
   }
+
+
+
+  /* Output */
+  digitalWrite(stall0_state_pin, stall0_state == true ? HIGH : LOW );
+  digitalWrite(stall1_state_pin, stall1_state == true ? HIGH : LOW );
 
   flush0_timeout -= now_t - prev_t;
   flush1_timeout -= now_t - prev_t;
