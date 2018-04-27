@@ -56,9 +56,12 @@ def ToiletAvg(floor):
 		with open('data/toilet1_log.txt', 'r') as f:
 			t_list = f.read().split(',')
 		f.close()
-		t_list = [float(i) for i in t_list]
-
-		return sum(t_list)/len(t_list)
+		if len(t_list) > 0:
+			t_list = [float(i) for i in t_list]
+			return sum(t_list)/len(t_list)
+		else:
+			return 65535
+			
 	elif floor == 2:
 		return 102.7
 	else:
@@ -162,7 +165,7 @@ def BatteryRecord(x):
 		last_t = datetime.datetime.strptime(last_log[0], '%Y-%m-%d %H:%M:%S.%f')
 	else:
 		last_t = now_t
-		
+	'''	
 	# remove lines if necessiary
 	if len(lines) > LOG_MAX_LEN:
 		if now_t - last_t < LOG_T_DELTA:
@@ -178,14 +181,26 @@ def BatteryRecord(x):
 			with open ("data/battery_log.txt", "w") as f:
 				f.writelines(lines[:-1])
 			f.close()
-
-	# write
-	with open ("data/battery_log.txt", "a") as f:
-		f.write(str(now_t)+','+str(x))
+	'''
+	if (now_t - last_t)  > LOG_T_DELTA:
+		# write
+		with open ("data/battery_log.txt", "a") as f:
+			f.write(str(now_t)+','+str(x))
+		f.close()
+	
+	
+	
+def BatteryCurrLevel():
+	with open ("data/battery_log.txt", "r") as f:
+		lines = f.readlines()
 	f.close()
 
+	if len(lines) > 0:
+		last_log = lines[-1].split(',')
+		return True, float(last_log[1])
+		
+	return False, 0
 	
-
 
 def BatteryPlot():
 
@@ -195,7 +210,7 @@ def BatteryPlot():
 		value_list = []
 		for row in r:
 			t_list.append(datetime.datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f'))
-			value_list.append(row[1])
+			value_list.append(float(row[1]))
 	f.close()
 
 	if len(t_list) <= 1:
@@ -205,6 +220,7 @@ def BatteryPlot():
 
 	fig, ax = plt.subplots()
 	ax.plot_date(t_list, value_list, 'b-')
+	
 	ax.xaxis.set_major_locator(DayLocator())
 	ax.xaxis.set_minor_locator(HourLocator(np.arange(0, 25, 6)))
 	ax.xaxis.set_major_formatter(DateFormatter('\n%m-%d'))
@@ -463,14 +479,22 @@ def on_callback_query(msg):
 			bot.sendMessage(from_id, 'Which Employee?', reply_markup = menu_cubicle_stat)
 
 		elif commands[1] == 'battery':
-			bot.sendMessage(from_id, 'Drawing Plot')
-			if BatteryPlot():
-				bot.sendMessage(from_id, 'Sending Plot')
-				with open('data/battery_plot.png', 'rb') as f:
-					bot.sendPhoto(from_id, f)
-				f.close()
+			hasData, level = BatteryCurrLevel()
+			if hasData:
+				bot.sendMessage(from_id, 'Fuel Level: '+str(round(level, 2))+' V')
+				
+				bot.sendMessage(from_id, 'Drawing Plot')
+				if BatteryPlot():
+					bot.sendMessage(from_id, 'Sending Plot')
+					with open('data/battery_plot.png', 'rb') as f:
+						bot.sendPhoto(from_id, f)
+					f.close()
+				else:
+					bot.sendMessage(from_id, 'Error: Insufficient Data')
+
 			else:
-				bot.sendMessage(from_id, 'Error: Insufficient Data')
+				bot.sendMessage(from_id, 'Error: Open battery log failed')
+				
 
 
 
