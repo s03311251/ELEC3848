@@ -1,0 +1,3 @@
+[submodule "ELEC3848-display"]
+	path = ELEC3848-display
+	url = https://github.com/onedino/ELEC3848-display
