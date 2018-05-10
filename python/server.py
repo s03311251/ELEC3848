@@ -533,7 +533,7 @@ def on_callback_query(msg):
 
 
 if __name__ == '__main__':
-	bot = telepot.Bot('568594704:AAEeL4ThpMiwRg2B6lCbKdiRRl0HYaWn-e0')
+	bot = telepot.Bot('deleted due to privacy')
 
 	MessageLoop(bot, {'chat': on_chat_message, 'callback_query': on_callback_query}).run_as_thread()
 	

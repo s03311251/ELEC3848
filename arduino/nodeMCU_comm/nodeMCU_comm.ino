@@ -1,7 +1,4 @@
 #include <ESP8266WiFi.h>
-
-//const char* ssid     = "AndroidAPFF";
-//const char* password = "23838018806048";
 const char* ssid     = "IDP2014";
 const char* password = "12345678";
 
